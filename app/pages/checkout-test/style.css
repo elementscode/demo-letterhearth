@@ -1,0 +1,95 @@
+@import "#app/shared/styles/page.css";
+
+.page-checkout-test .checkout-head {
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.page-checkout-test h1 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+}
+
+.page-checkout-test .line-item {
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.page-checkout-test .item-name {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.page-checkout-test .item-note,
+.page-checkout-test .renews {
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}
+
+.page-checkout-test .amount {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.page-checkout-test .totals {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-3) var(--space-4);
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--accent-soft);
+}
+
+.page-checkout-test .totals dt {
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+
+.page-checkout-test .totals dd {
+  margin: 0;
+  text-align: right;
+  min-width: 0;
+}
+
+.page-checkout-test .email {
+  overflow-wrap: anywhere;
+}
+
+.page-checkout-test .total-label {
+  color: var(--ink);
+  font-weight: var(--weight-semibold);
+}
+
+.page-checkout-test .total {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.page-checkout-test .renews {
+  margin: calc(-1 * var(--space-2)) 0 0;
+}
+
+.page-checkout-test .pay {
+  width: 100%;
+}
+
+.page-checkout-test .cancel {
+  align-self: center;
+}
+
+.page-checkout-test .test-note {
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}
+
+.page-checkout-test .test-note code {
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,76 @@
+// Config for the build and the app.
+//
+// Import it anywhere. Values are constant folded at build time, so changing
+// one rebuilds the files that read it.
+//
+//   import config from "#config";
+//   let name = config.database.name;
+//
+// env("NAME", fallback) reads a variable from the active environment's file:
+// config/env/development.env, config/env/production.env, and so on.
+//
+// Keys are server only. A /** @browser */ tag on a property puts that
+// property, and everything under it, in the browser bundle.
+//
+//   /** @browser */
+//   public: { appName: "Acme" },
+{
+  package: {
+    dependencies: {
+      "@elements/app": "latest",
+      "@elements/style": "latest",
+      "@types/node": "latest",
+      "marked": "^18.0.14",
+      "stripe": "^22.6.2",
+      "tslib": "latest",
+    },
+  },
+  resolve: {
+    imports: {
+      "#config": "./config.jsoc",
+      "#app/*": "./app/*",
+    },
+  },
+  server: {
+    port: env<number>("PORT", 4000),
+    address: env("ADDRESS", "127.0.0.1"),
+  },
+  database: {
+    name: "letterhearth",
+    host: env("DB_HOST", "127.0.0.1"),
+    port: env("DB_PORT", 5433),
+    user: env("DB_USER", "postgres"),
+    password: env("DB_PASSWORD", ""),
+    default: env("DB_DEFAULT", ""),
+  },
+  email: {
+    live: env<boolean>("EMAIL_LIVE", false),
+    from: "Letterhearth <letters@letterhearth.com>",
+    host: env("SMTP_HOST"),
+    port: env<number>("SMTP_PORT", 587),
+    user: env("SMTP_USER"),
+    password: env("SMTP_PASSWORD"),
+    startTls: true,
+  },
+  session: {
+    expires: "30d",
+  },
+
+  stripe: {
+    // Required: a build without it fails. Development sets it empty, and
+    // paid plans go through the in-app test checkout until a key is added.
+    secretKey: env!("STRIPE_SECRET_KEY"),
+
+    // Development only, printed by `stripe listen`. Production registers its
+    // own endpoint and stores the secret (see `payments/webhook`).
+    webhookSecret: env("STRIPE_WEBHOOK_SECRET", ""),
+  },
+
+  /** @browser */
+  newsletter: {
+    name: "Letterhearth",
+    tagline: "Letters from a small kitchen: cooking, keeping a home, and the slow work of both.",
+    writer: "Maren Holt",
+    priceCents: 800,
+  },
+}

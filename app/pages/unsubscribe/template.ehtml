@@ -1,0 +1,51 @@
+import "./style.css";
+import config from "#config";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { Layout } from "#app/shared/templates/layout";
+import { resubscribeByToken } from "#app/shared/services/subscribers";
+
+function onResubscribe(token: string, state: { back: boolean }) {
+  state.back = resubscribeByToken(token);
+}
+
+<html lang="en" class="page-unsubscribe" (
+  token: string,
+  email: string,
+  paid: boolean,
+  private state: { back: boolean } = { back: false },
+)>
+  <head>
+    <title>Unsubscribe · {config.newsletter.name}</title>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <Layout>
+      <div class="page-shell is-form panel stack is-lg">
+        <div e:if={!email} class="stack">
+          <h1>This link isn't valid</h1>
+          <p>The unsubscribe link may be incomplete. Copy the whole link from the email, or sign in to change your email settings.</p>
+          <div><a class="button" href="/signin">Sign in</a></div>
+        </div>
+
+        <div e:elseif={state.back} class="stack">
+          <h1>Welcome back</h1>
+          <p>{email} will get new letters from {config.newsletter.name} again.</p>
+          <div><a class="button is-primary" href="/">Go to the archive</a></div>
+        </div>
+
+        <div e:else class="stack">
+          <h1>You're unsubscribed</h1>
+          <p>{email} won't get any more letters from {config.newsletter.name}.</p>
+          <p e:if={paid} class="callout is-accent">
+            Your paid subscription is still active, so every letter stays open to you on the site.
+            To stop paying, cancel it from <a class="link-prose" href="/account">your account</a>.
+          </p>
+          <div class="cluster">
+            <button type="button" onclick={() => onResubscribe(token, state)}>Undo, keep sending letters</button>
+            <a class="link-muted" href="/">Go to the archive</a>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  </body>
+</html>

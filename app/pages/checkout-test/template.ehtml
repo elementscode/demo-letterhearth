@@ -1,0 +1,86 @@
+import "./style.css";
+import { redirect } from "@elements/app";
+import config from "#config";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { Layout } from "#app/shared/templates/layout";
+import { payTestCheckout } from "#app/shared/services/subscribers";
+import { errorMessage, formatDollars } from "#app/shared/format";
+
+interface PayState {
+  busy: boolean;
+  error: string;
+}
+
+const PRICE = formatDollars(config.newsletter.priceCents);
+const PRICE_CENTS = `$${(config.newsletter.priceCents / 100).toFixed(2)}`;
+
+async function onPay(state: PayState) {
+  state.error = "";
+  state.busy = true;
+
+  try {
+    await payTestCheckout();
+    redirect("/account?paid=1");
+  } catch (err: any) {
+    state.error = errorMessage(err);
+    state.busy = false;
+  }
+}
+
+<html lang="en" class="page-checkout-test" (email: string, private state: PayState = { busy: false, error: "" })>
+  <head>
+    <title>Checkout · {config.newsletter.name}</title>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <Layout>
+      <div class="page-shell is-form stack is-xl">
+        <div class="checkout-head row">
+          <div class="stack is-xs">
+            <p class="eyebrow">Checkout</p>
+            <h1>Subscribe to {config.newsletter.name}</h1>
+          </div>
+          <span class="pill is-warning"><span class="pill-dot"></span>Test mode</span>
+        </div>
+
+        <p e:if={state.error} class="callout is-danger" role="alert">{state.error}</p>
+
+        <section class="card">
+          <div class="card-body stack is-lg">
+            <div class="line-item row">
+              <div class="stack is-xs">
+                <span class="item-name">{config.newsletter.name} paid subscription</span>
+                <span class="item-note">Every letter in full, billed monthly. Cancel any time.</span>
+              </div>
+              <span class="amount">{PRICE_CENTS}</span>
+            </div>
+
+            <dl class="totals">
+              <dt>Billed to</dt>
+              <dd class="email">{email}</dd>
+
+              <dt class="total-label">Due today</dt>
+              <dd class="total">{PRICE_CENTS}</dd>
+            </dl>
+
+            <p class="renews">Then {PRICE} every month until you cancel.</p>
+
+            <div class="checkout-actions stack is-sm">
+              <button type="button" class={["is-primary", "is-lg", "pay", state.busy && "is-loading"]} disabled={state.busy}
+                      onclick={() => onPay(state)}>
+                {state.busy ? "Paying…" : `Pay ${PRICE_CENTS}`}
+              </button>
+              <a class="link-muted cancel" href="/account">Cancel</a>
+            </div>
+          </div>
+        </section>
+
+        <p class="test-note">
+          This is the app's built-in test checkout. No card is taken and nothing is charged; paying here
+          records the subscription exactly as a Stripe payment would. Add <code>STRIPE_SECRET_KEY</code>
+          to <code>config/env/development.env</code> and this button goes to real Stripe Checkout.
+        </p>
+      </div>
+    </Layout>
+  </body>
+</html>

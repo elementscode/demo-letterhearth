@@ -1,0 +1,25 @@
+import "./style.css";
+import config from "#config";
+import { EmailFooter } from "#app/emails/footer";
+
+/**
+ * Sent the first time a reader becomes a paid subscriber.
+ *
+ * @email
+ */
+<html (unsubscribeUrl: string)>
+  <body class="email paid-welcome">
+    <div class="email-wrap">
+      <h1>You're a paid subscriber</h1>
+      <p>
+        Thank you. Your support is what lets {config.newsletter.writer} keep writing
+        {config.newsletter.name}.
+      </p>
+      <p>
+        Every paid letter now arrives in full, and the whole <a href="/">archive</a> is open
+        to you. You can cancel at any time from <a href="/account">your account</a>.
+      </p>
+      <EmailFooter {unsubscribeUrl} />
+    </div>
+  </body>
+</html>

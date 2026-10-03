@@ -1,0 +1,91 @@
+@import "#app/shared/styles/page.css";
+
+.page-home .masthead {
+  padding-block: 0 var(--space-4);
+  text-align: center;
+}
+
+.page-home .masthead .eyebrow {
+  color: var(--accent);
+}
+
+.page-home .masthead h1 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(var(--text-4xl), 9vw, var(--text-6xl));
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-none);
+  letter-spacing: -0.03em;
+}
+
+.page-home .masthead .lede {
+  max-width: 32rem;
+  margin-inline: auto;
+  font-family: var(--font-serif);
+}
+
+.page-home .subscribe {
+  padding: var(--space-6);
+  border: 1px solid var(--accent-edge);
+  border-radius: var(--radius-lg);
+  background: var(--accent-soft);
+}
+
+.page-home .archive {
+  padding-top: var(--space-6);
+}
+
+.page-home .archive-head {
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.page-home .archive-head h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+}
+
+.page-home .archive-list > li {
+  padding-block: var(--space-5);
+}
+
+.page-home .archive-meta {
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}
+
+.page-home .archive-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  line-height: var(--leading-tight);
+}
+
+.page-home .archive-title a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.page-home .archive-title a:hover {
+  color: var(--accent-deep);
+}
+
+.page-home .archive-excerpt {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  color: var(--ink-soft);
+}
+
+@media (max-width: 40rem) {
+  .page-home .subscribe {
+    padding: var(--space-4);
+  }
+}
+
+.page-home .archive-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

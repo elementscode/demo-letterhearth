@@ -1,0 +1,133 @@
+import "./style.css";
+import { redirect } from "@elements/app";
+import config from "#config";
+import { errorMessage } from "#app/shared/format";
+import { subscribe, startUpgrade, Plan } from "#app/shared/services/subscribers";
+
+/** Who is looking at the form: a signed-in reader, or nobody. */
+export interface ReaderState {
+  email: string;
+  plan: Plan;
+}
+
+interface SubscribeState {
+  email: string;
+  plan: Plan;
+  error: string;
+  done: string;
+  busy: boolean;
+}
+
+const PRICE = `$${(config.newsletter.priceCents / 100).toFixed(0)}`;
+
+async function onSubscribe(form: SubscribeState) {
+  form.error = "";
+  form.busy = true;
+
+  try {
+    let result = await subscribe(form.email, form.plan);
+
+    switch (result.status) {
+      case "checkout":
+        redirect(result.url);
+        return;
+
+      case "subscribed":
+        form.done = "You're subscribed. A welcome letter is on its way to your inbox.";
+        break;
+
+      case "check-inbox":
+        form.done = "That address is already on the list. We've emailed it a sign-in link.";
+        break;
+
+      case "already":
+        form.done = "You're already subscribed.";
+        break;
+    }
+  } catch (err: any) {
+    form.error = errorMessage(err);
+  } finally {
+    form.busy = false;
+  }
+}
+
+async function onUpgrade(form: SubscribeState) {
+  form.error = "";
+  form.busy = true;
+
+  try {
+    redirect(await startUpgrade());
+  } catch (err: any) {
+    form.error = errorMessage(err);
+    form.busy = false;
+  }
+}
+
+<SubscribeForm (
+  reader: ReaderState | null,
+  plan: Plan = "free",
+  private form: SubscribeState = { email: "", plan, error: "", done: "", busy: false },
+)>
+  <div class="subscribe-form stack">
+    <p e:if={form.error} class="callout is-danger" role="alert">{form.error}</p>
+
+    <div e:if={form.done} class="callout is-success" role="status">{form.done}</div>
+
+    <div e:elseif={reader && reader.plan === "paid"} class="stack is-sm">
+      <p><strong>You're a paid subscriber.</strong> Every letter is open to you.</p>
+      <a class="link-action" href="/account">Manage your subscription</a>
+    </div>
+
+    <div e:elseif={reader} class="stack is-sm">
+      <p>
+        You're subscribed for free as <strong>{reader?.email}</strong>.
+        Upgrade for {PRICE} a month to read every paid letter in full.
+      </p>
+      <div class="cluster">
+        <button type="button" class="is-primary" disabled={form.busy} onclick={() => onUpgrade(form)}>
+          Upgrade for {PRICE}/month
+        </button>
+        <a class="link-muted" href="/account">Your account</a>
+      </div>
+    </div>
+
+    <form e:else class="stack" onsubmit={() => onSubscribe(form)}>
+      <div class="plans" role="radiogroup" aria-label="Plan">
+        <label class={["plan", form.plan === "free" && "is-active"]}>
+          <input type="radio" name="plan" checked={form.plan === "free"} onchange={() => form.plan = "free"}>
+          <span>
+            <span class="plan-name">Free</span>
+            <span class="plan-note">Free letters in full, and the opening of every paid one.</span>
+          </span>
+        </label>
+
+        <label class={["plan", form.plan === "paid" && "is-active"]}>
+          <input type="radio" name="plan" checked={form.plan === "paid"} onchange={() => form.plan = "paid"}>
+          <span>
+            <span class="plan-name">Paid · {PRICE}/month</span>
+            <span class="plan-note">Every letter in full. Cancel any time.</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="subscribe-row row">
+        <input type="email"
+               name="email"
+               value={form.email}
+               aria-label="Email address"
+               placeholder="you@example.com"
+               autocomplete="email"
+               autocapitalize="none"
+               spellcheck={false}
+               required>
+        <button type="submit" class="is-primary" disabled={form.busy}>
+          {form.plan === "paid" ? "Continue to payment" : "Subscribe"}
+        </button>
+      </div>
+
+      <p class="fine">
+        Paid plans are billed monthly by card through Stripe. Every email has a one-click unsubscribe link.
+      </p>
+    </form>
+  </div>
+</SubscribeForm>

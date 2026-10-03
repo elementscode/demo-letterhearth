@@ -1,0 +1,15 @@
+@import "#app/shared/styles/email.css";
+
+.email.signin-link h1 {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.email.signin-link .cta {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 6px;
+  background: #a4481f;
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+}

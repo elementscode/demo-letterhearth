@@ -1,0 +1,161 @@
+import "./style.css";
+import { redirect } from "@elements/app";
+import config from "#config";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { Layout } from "#app/shared/templates/layout";
+import {
+  AccountView,
+  cancelSubscription,
+  resumeSubscription,
+  setEmailsEnabled,
+  startUpgrade,
+} from "#app/shared/services/subscribers";
+import { errorMessage, formatDate } from "#app/shared/format";
+
+interface AccountState {
+  view: AccountView;
+  error: string;
+  busy: boolean;
+}
+
+const PRICE = `$${(config.newsletter.priceCents / 100).toFixed(0)}`;
+
+async function run(state: AccountState, action: () => Promise<AccountView | void>) {
+  state.error = "";
+  state.busy = true;
+
+  try {
+    let view = await action();
+
+    if (view) {
+      state.view = view;
+    }
+  } catch (err: any) {
+    state.error = errorMessage(err);
+  } finally {
+    state.busy = false;
+  }
+}
+
+async function onUpgrade(state: AccountState) {
+  await run(state, async () => redirect(await startUpgrade()));
+}
+
+async function onCancel(state: AccountState) {
+  if (!confirm("Cancel your paid subscription? You keep paid access until the end of this period.")) {
+    return;
+  }
+
+  await run(state, () => cancelSubscription());
+}
+
+async function onResume(state: AccountState) {
+  await run(state, () => resumeSubscription());
+}
+
+async function onEmails(state: AccountState, enabled: boolean) {
+  await run(state, async () => setEmailsEnabled(enabled));
+}
+
+<html lang="en" class="page-account" (
+  initial: AccountView,
+  paidNotice: "" | "paid" | "processing",
+  private state: AccountState = { view: initial, error: "", busy: false },
+)>
+  <head>
+    <title>Your account · {config.newsletter.name}</title>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <Layout>
+      <div class="page-shell is-form stack is-xl">
+        <div class="stack is-xs">
+          <h1>Your subscription</h1>
+          <p class="muted">Signed in as {state.view.email}</p>
+        </div>
+
+        <p e:if={paidNotice === "paid"} class="callout is-success" role="status">
+          Payment received. You're a paid subscriber, and every letter is open to you.
+        </p>
+        <p e:if={paidNotice === "processing"} class="callout is-warning" role="status">
+          Your payment is processing. Your plan updates here as soon as Stripe confirms it.
+        </p>
+        <p e:if={state.error} class="callout is-danger" role="alert">{state.error}</p>
+
+        <section class="card">
+          <div class="card-head row">
+            <h2>Plan</h2>
+            <span e:if={state.view.plan === "paid"} class="pill is-accent">Paid</span>
+            <span e:else class="pill">Free</span>
+          </div>
+
+          <div class="card-body stack">
+            <div e:if={state.view.plan === "free"} class="stack is-sm">
+              <p>
+                You get every free letter in full, and the opening of every paid one.
+                Upgrade for {PRICE} a month to read everything.
+              </p>
+              <div>
+                <button type="button" class="is-primary" disabled={state.busy} onclick={() => onUpgrade(state)}>
+                  Upgrade for {PRICE}/month
+                </button>
+              </div>
+            </div>
+
+            <div e:elseif={state.view.cancelAtPeriodEnd} class="stack is-sm">
+              <p>
+                Your paid subscription is cancelled. You keep paid access
+                <span e:if={state.view.currentPeriodEnd}>until {formatDate(state.view.currentPeriodEnd!)}</span>,
+                then move to the free plan.
+              </p>
+              <div>
+                <button type="button" class="is-primary" disabled={state.busy} onclick={() => onResume(state)}>
+                  Keep my paid subscription
+                </button>
+              </div>
+            </div>
+
+            <div e:else class="stack is-sm">
+              <p>
+                {PRICE} a month<span e:if={!state.view.billedByStripe}>, complimentary</span>.
+                <span e:if={state.view.currentPeriodEnd}>Renews {formatDate(state.view.currentPeriodEnd!)}.</span>
+                Thank you for supporting {config.newsletter.name}.
+              </p>
+              <div>
+                <button type="button" disabled={state.busy} onclick={() => onCancel(state)}>
+                  Cancel subscription
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head row">
+            <h2>Email</h2>
+            <span e:if={state.view.emailsEnabled} class="pill is-success"><span class="pill-dot"></span>On</span>
+            <span e:else class="pill">Off</span>
+          </div>
+
+          <div class="card-body stack is-sm">
+            <p e:if={state.view.emailsEnabled}>New letters arrive at {state.view.email}.</p>
+            <p e:else>
+              You're not getting letters by email.
+              <span e:if={state.view.plan === "paid"}>Your paid plan is unchanged, and every letter is here on the site.</span>
+            </p>
+            <div>
+              <button e:if={state.view.emailsEnabled} type="button" disabled={state.busy}
+                      onclick={() => onEmails(state, false)}>
+                Stop emails
+              </button>
+              <button e:else type="button" class="is-primary" disabled={state.busy}
+                      onclick={() => onEmails(state, true)}>
+                Send me letters again
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </Layout>
+  </body>
+</html>

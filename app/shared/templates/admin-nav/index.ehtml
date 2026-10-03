@@ -1,0 +1,8 @@
+import "./style.css";
+
+<AdminNav (active: "subscribers" | "posts")>
+  <nav class="admin-nav tab-list" aria-label="Writer">
+    <a href="/admin" class={["tab", active === "subscribers" && "is-active"]}>Subscribers</a>
+    <a href="/admin/posts" class={["tab", active === "posts" && "is-active"]}>Posts</a>
+  </nav>
+</AdminNav>
