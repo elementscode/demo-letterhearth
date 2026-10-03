@@ -1,0 +1,49 @@
+import "./style.css";
+import config from "#config";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { Layout } from "#app/shared/templates/layout";
+import { SubscribeForm, ReaderState } from "#app/shared/templates/subscribe-form";
+import { PostSummary } from "#app/shared/services/posts";
+import { formatDate } from "#app/shared/format";
+
+<html lang="en" class="page-home" (posts: PostSummary[], reader: ReaderState | null)>
+  <head>
+    <title>{config.newsletter.name}</title>
+    <meta name="description" content={config.newsletter.tagline}>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <Layout>
+      <div class="page-shell is-form stack is-xl">
+        <header class="masthead stack is-md">
+          <p class="eyebrow">A newsletter by {config.newsletter.writer}</p>
+          <h1>{config.newsletter.name}</h1>
+          <p class="lede">{config.newsletter.tagline}</p>
+        </header>
+
+        <section class="subscribe" aria-label="Subscribe">
+          <SubscribeForm {reader} />
+        </section>
+
+        <section id="archive" class="archive stack">
+          <div class="archive-head row">
+            <h2>The archive</h2>
+            <span class="archive-meta">{posts.length} letters</span>
+          </div>
+
+          <ul class="archive-list">
+            <li e:for={post of posts} class="stack is-sm">
+              <div class="archive-meta cluster is-sm">
+                <time>{formatDate(post.publishAt)}</time>
+                <span e:if={post.access === "paid"} class="pill is-accent">Paid</span>
+              </div>
+              <h3 class="archive-title"><a href={`/p/${post.slug}`}>{post.title}</a></h3>
+              <p class="archive-excerpt">{post.excerpt}</p>
+            </li>
+            <li e:if={posts.length === 0} class="archive-excerpt">The first letter is on its way.</li>
+          </ul>
+        </section>
+      </div>
+    </Layout>
+  </body>
+</html>

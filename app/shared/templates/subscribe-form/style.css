@@ -1,0 +1,65 @@
+.subscribe-form .subscribe-row {
+  gap: var(--space-3);
+}
+
+.subscribe-form .subscribe-row input[type="email"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.subscribe-form .plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.subscribe-form .plan {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  cursor: pointer;
+}
+
+.subscribe-form .plan.is-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.subscribe-form .plan input {
+  margin-top: 0.2em;
+}
+
+.subscribe-form .plan-name {
+  display: block;
+  font-weight: var(--weight-semibold);
+}
+
+.subscribe-form .plan-note {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}
+
+.subscribe-form .fine {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}
+
+@media (max-width: 40rem) {
+  .subscribe-form .plans {
+    grid-template-columns: 1fr;
+  }
+
+  .subscribe-form .subscribe-row {
+    flex-wrap: wrap;
+  }
+
+  .subscribe-form .subscribe-row button {
+    width: 100%;
+  }
+}

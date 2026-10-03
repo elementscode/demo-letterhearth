@@ -1,0 +1,12 @@
+import config from "#config";
+
+<EmailFooter (unsubscribeUrl: string, note: string = "")>
+  <div class="email-footer">
+    <p e:if={note}>{note}</p>
+    <p>
+      {config.newsletter.name}, letters from {config.newsletter.writer}.
+      <a href="/account">Manage your subscription</a> ·
+      <a href={unsubscribeUrl}>Unsubscribe</a>
+    </p>
+  </div>
+</EmailFooter>

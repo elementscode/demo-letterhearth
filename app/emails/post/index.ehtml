@@ -1,0 +1,42 @@
+import "./style.css";
+import { raw } from "@elements/app";
+import config from "#config";
+import { EmailFooter } from "#app/emails/footer";
+
+/**
+ * A published post. Paid posts go in full to paid readers and as a teaser,
+ * ending in a link to the post, to free readers.
+ *
+ * @email
+ */
+<html (
+  title: string,
+  html: string,
+  paid: boolean,
+  teaser: boolean,
+  postUrl: string,
+  unsubscribeUrl: string,
+)>
+  <body class="email post">
+    <div class="email-wrap">
+      <p class="masthead">{config.newsletter.name}</p>
+      <h1>{title}</h1>
+      <p e:if={paid} class="badge">For paid subscribers</p>
+
+      <div class="body">{raw(html)}</div>
+
+      <div e:if={teaser} class="teaser">
+        <p><strong>The rest of this letter is for paid subscribers.</strong></p>
+        <p>
+          Subscribe for ${(config.newsletter.priceCents / 100).toFixed(0)} a month to read it,
+          and every paid letter after it.
+        </p>
+        <p><a class="cta" href={postUrl}>Keep reading</a></p>
+      </div>
+
+      <p e:else><a href={postUrl}>Read on the web</a></p>
+
+      <EmailFooter {unsubscribeUrl} />
+    </div>
+  </body>
+</html>

@@ -1,0 +1,55 @@
+/* Letterhearth: ember on warm paper. */
+@layer tokens {
+  :root {
+    --brand-50: oklch(0.975 0.014 52);
+    --brand-100: oklch(0.945 0.032 52);
+    --brand-200: oklch(0.89 0.062 50);
+    --brand-300: oklch(0.82 0.100 48);
+    --brand-400: oklch(0.72 0.140 45);
+    --brand-500: oklch(0.63 0.155 42);
+    --brand-600: oklch(0.55 0.150 40);
+    --brand-700: oklch(0.46 0.125 38);
+    --brand-800: oklch(0.37 0.095 36);
+    --brand-900: oklch(0.27 0.065 35);
+    --brand-950: oklch(0.18 0.040 35);
+    --accent: var(--brand-600);
+    --accent-deep: var(--brand-700);
+    --accent-soft: var(--brand-50);
+    --accent-ink: #ffffff;
+    --accent-edge: var(--brand-200);
+    --link-c: 0.150;
+    --link-h: 40;
+
+    /* Warm the neutral ramp so ink and rules sit on paper, not slate. */
+    --neutral-50: oklch(0.985 0.006 70);
+    --neutral-100: oklch(0.962 0.009 70);
+    --neutral-200: oklch(0.915 0.012 65);
+    --neutral-300: oklch(0.855 0.015 60);
+    --neutral-400: oklch(0.735 0.018 55);
+    --neutral-500: oklch(0.615 0.020 50);
+    --neutral-600: oklch(0.500 0.020 50);
+    --neutral-700: oklch(0.385 0.018 45);
+    --neutral-800: oklch(0.285 0.016 45);
+    --neutral-900: oklch(0.215 0.014 45);
+    --neutral-950: oklch(0.140 0.010 45);
+    --bg: oklch(0.993 0.005 75);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --accent: var(--brand-400);
+      --accent-deep: var(--brand-300);
+      --accent-soft: var(--brand-900);
+      --accent-ink: var(--brand-950);
+      --accent-edge: var(--brand-700);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --accent: var(--brand-400);
+    --accent-deep: var(--brand-300);
+    --accent-soft: var(--brand-900);
+    --accent-ink: var(--brand-950);
+    --accent-edge: var(--brand-700);
+  }
+}

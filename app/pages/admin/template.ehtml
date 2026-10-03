@@ -1,0 +1,122 @@
+import "./style.css";
+import { LiveView } from "@elements/app";
+import config from "#config";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { Layout } from "#app/shared/templates/layout";
+import { AdminNav } from "#app/shared/templates/admin-nav";
+import { SubscriberRow, statsOf } from "#app/shared/services/subscribers";
+import { formatDollars, formatShortDate } from "#app/shared/format";
+
+export type Filter = "all" | "paid" | "free" | "unsubscribed";
+
+export function filterRows(rows: SubscriberRow[], filter: Filter): SubscriberRow[] {
+  let kept = rows.filter((r) => {
+    switch (filter) {
+      case "paid":
+        return r.plan === "paid";
+
+      case "free":
+        return r.plan === "free" && r.emailsEnabled;
+
+      case "unsubscribed":
+        return !r.emailsEnabled;
+
+      default:
+        return true;
+    }
+  });
+
+  return kept.sort((a, b) => +b.createdAt - +a.createdAt);
+}
+
+<html lang="en" class="page-admin" (
+  subscribers: LiveView<SubscriberRow>,
+  private view: { filter: Filter } = { filter: "all" as Filter },
+)>
+  <head>
+    <title>Subscribers · {config.newsletter.name}</title>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <Layout wide={true}>
+      <div class="page-shell is-wide stack is-xl">
+        <div class="admin-head row">
+          <div class="stack is-xs">
+            <p class="eyebrow">Writer</p>
+            <h1>{config.newsletter.name}</h1>
+          </div>
+          <a class="button is-primary" href="/admin/posts/new">New post</a>
+        </div>
+
+        <AdminNav active="subscribers" />
+
+        <section class="stats" aria-label="Subscribers" aria-live="polite">
+          <div class="stat card stack is-sm">
+            <p class="stat-label">Free subscribers</p>
+            <p class="stat-value">{statsOf(subscribers.slice()).free}</p>
+            <p class="stat-note">getting letters by email</p>
+          </div>
+          <div class="stat card stack is-sm">
+            <p class="stat-label">Paid subscribers</p>
+            <p class="stat-value">{statsOf(subscribers.slice()).paid}</p>
+            <p class="stat-note">at {formatDollars(config.newsletter.priceCents)} a month</p>
+          </div>
+          <div class="stat card is-revenue stack is-sm">
+            <p class="stat-label">Monthly revenue</p>
+            <p class="stat-value">{formatDollars(statsOf(subscribers.slice()).monthlyRevenueCents)}</p>
+            <p class="stat-note">
+              <span class="pill is-success"><span class="pill-dot"></span>Live</span>
+            </p>
+          </div>
+        </section>
+
+        <section class="stack">
+          <div class="list-head row">
+            <h2>Subscribers</h2>
+            <div class="filters cluster" role="group" aria-label="Filter">
+              <button type="button" class={["is-sm", view.filter === "all" ? "is-primary" : "is-ghost"]}
+                      onclick={() => view.filter = "all"}>All {subscribers.length}</button>
+              <button type="button" class={["is-sm", view.filter === "paid" ? "is-primary" : "is-ghost"]}
+                      onclick={() => view.filter = "paid"}>Paid</button>
+              <button type="button" class={["is-sm", view.filter === "free" ? "is-primary" : "is-ghost"]}
+                      onclick={() => view.filter = "free"}>Free</button>
+              <button type="button" class={["is-sm", view.filter === "unsubscribed" ? "is-primary" : "is-ghost"]}
+                      onclick={() => view.filter = "unsubscribed"}>Unsubscribed</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Plan</th>
+                  <th>Email delivery</th>
+                  <th class="joined">Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr e:for={s of filterRows(subscribers.slice(), view.filter)}>
+                  <td class="email">{s.email}</td>
+                  <td>
+                    <span e:if={s.plan === "paid" && s.cancelAtPeriodEnd} class="pill is-warning">Paid, cancelling</span>
+                    <span e:elseif={s.plan === "paid"} class="pill is-accent">Paid</span>
+                    <span e:else class="pill">Free</span>
+                  </td>
+                  <td>
+                    <span e:if={s.emailsEnabled} class="pill is-success"><span class="pill-dot"></span>On</span>
+                    <span e:else class="pill is-danger">Unsubscribed</span>
+                  </td>
+                  <td class="joined">{formatShortDate(s.createdAt)}</td>
+                </tr>
+                <tr e:if={filterRows(subscribers.slice(), view.filter).length === 0}>
+                  <td colspan="4" class="stat-note">Nobody here yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </Layout>
+  </body>
+</html>

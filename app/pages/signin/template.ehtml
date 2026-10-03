@@ -1,0 +1,148 @@
+import "./style.css";
+import { redirect } from "@elements/app";
+import config from "#config";
+import { errorMessage } from "#app/shared/format";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { Layout } from "#app/shared/templates/layout";
+import { writerSignin, WRITER_DEMO } from "#app/shared/services/auth";
+import { requestSigninLink } from "#app/shared/services/subscribers";
+
+interface WriterForm {
+  email: string;
+  password: string;
+  error: string;
+}
+
+interface ReaderForm {
+  email: string;
+  error: string;
+  sent: boolean;
+}
+
+function onWriterSignin(form: WriterForm) {
+  try {
+    writerSignin(form.email, form.password);
+    form.error = "";
+    redirect("/admin");
+  } catch (err: any) {
+    form.error = errorMessage(err);
+  }
+}
+
+function onReaderLink(form: ReaderForm) {
+  try {
+    requestSigninLink(form.email);
+    form.error = "";
+    form.sent = true;
+  } catch (err: any) {
+    form.error = errorMessage(err);
+  }
+}
+
+function fillDemo(form: WriterForm) {
+  form.email = WRITER_DEMO.email;
+  form.password = WRITER_DEMO.password;
+}
+
+<html lang="en" class="page-signin" (
+  expired: boolean,
+  private writer: WriterForm = { email: "", password: "", error: "" },
+  private reader: ReaderForm = { email: "", error: "", sent: false },
+)>
+  <head>
+    <title>Sign in · {config.newsletter.name}</title>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <Layout>
+      <div class="page-shell is-form stack is-xl">
+        <h1>Sign in</h1>
+
+        <p e:if={expired} class="callout is-warning">
+          That sign-in link has expired or was already used. Ask for a new one below.
+        </p>
+
+        <section class="panel card">
+          <div class="card-body stack">
+            <div class="stack is-xs">
+              <h2>Readers</h2>
+              <p>We'll email you a link that signs you in. No password needed.</p>
+            </div>
+
+            <div e:if={reader.sent} class="callout is-success" role="status">
+              If {reader.email} is subscribed, a sign-in link is on its way. It works for an hour.
+            </div>
+
+            <form e:else class="stack" onsubmit={() => onReaderLink(reader)}>
+              <p e:if={reader.error} class="callout is-danger" role="alert">{reader.error}</p>
+              <div class="field">
+                <label for="reader-email">Email</label>
+                <input id="reader-email"
+                       name="email"
+                       type="email"
+                       value={reader.email}
+                       autocomplete="email"
+                       autocapitalize="none"
+                       spellcheck={false}
+                       placeholder="you@example.com"
+                       required>
+              </div>
+              <div>
+                <button type="submit" class="is-primary">Email me a sign-in link</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="panel card">
+          <div class="card-body stack">
+            <div class="stack is-xs">
+              <h2>The writer</h2>
+              <p>Sign in to write posts and see your subscribers.</p>
+            </div>
+
+            <div class="demo callout is-accent stack is-sm">
+              <strong>Demo writer account</strong>
+              <dl>
+                <dt>Email</dt>
+                <dd>{WRITER_DEMO.email}</dd>
+                <dt>Password</dt>
+                <dd>{WRITER_DEMO.password}</dd>
+              </dl>
+              <div>
+                <button type="button" class="is-sm" onclick={() => fillDemo(writer)}>Fill in the demo login</button>
+              </div>
+            </div>
+
+            <form class="stack" onsubmit={() => onWriterSignin(writer)}>
+              <p e:if={writer.error} class="callout is-danger" role="alert">{writer.error}</p>
+              <div class="field">
+                <label for="writer-email">Email</label>
+                <input id="writer-email"
+                       name="email"
+                       type="email"
+                       value={writer.email}
+                       autocomplete="username"
+                       autocapitalize="none"
+                       spellcheck={false}
+                       required>
+              </div>
+              <div class="field">
+                <label for="writer-password">Password</label>
+                <input id="writer-password"
+                       name="password"
+                       type="password"
+                       value={writer.password}
+                       autocomplete="current-password"
+                       required>
+              </div>
+              <div>
+                <button type="submit" class="is-primary">Sign in as the writer</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </div>
+    </Layout>
+  </body>
+</html>

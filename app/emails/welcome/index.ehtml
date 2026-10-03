@@ -1,0 +1,26 @@
+import "./style.css";
+import config from "#config";
+import { EmailFooter } from "#app/emails/footer";
+
+/**
+ * Sent when someone subscribes.
+ *
+ * @email
+ */
+<html (unsubscribeUrl: string)>
+  <body class="email welcome">
+    <div class="email-wrap">
+      <h1>Welcome to {config.newsletter.name}</h1>
+      <p>
+        Thank you for subscribing. New letters from {config.newsletter.writer} will arrive
+        here, usually on Tuesdays.
+      </p>
+      <p>
+        While you wait, the <a href="/">archive</a> has every letter so far. Paid letters
+        show their opening; a paid subscription, ${(config.newsletter.priceCents / 100).toFixed(0)}
+        a month, opens the rest.
+      </p>
+      <EmailFooter {unsubscribeUrl} />
+    </div>
+  </body>
+</html>

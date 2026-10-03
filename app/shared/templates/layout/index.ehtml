@@ -1,0 +1,45 @@
+import "./style.css";
+import { redirect, session } from "@elements/app";
+import config from "#config";
+import { signout } from "#app/shared/services/auth";
+
+function onSignout() {
+  signout();
+  redirect("/");
+}
+
+<Layout (wide: boolean = false)>
+  <div class="app">
+    <header class="site-header">
+      <div class={["page-shell", wide ? "is-wide" : "is-form", "site-header-inner", "row"]}>
+        <a href="/" class="site-brand row">
+          <span class="site-mark">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 2c1.5 3.5 5.5 5.8 5.5 11a5.5 5.5 0 0 1-11 0c0-2.6 1.3-4.3 2.6-5.6.2 1.7 1 2.9 2.3 3.4C11 8.2 11.2 5 12 2Z" fill="currentColor"/>
+            </svg>
+          </span>
+          {config.newsletter.name}
+        </a>
+
+        <nav class="site-nav cluster is-md">
+          <a class="site-nav-archive" href="/#archive">Archive</a>
+          <a e:if={session.get("role") === "writer"} href="/admin">Dashboard</a>
+          <a e:if={session.get("role") === "reader"} href="/account">Account</a>
+          <button e:if={session.isLoggedIn()} type="button" class="is-ghost is-sm site-signout" onclick={() => onSignout()}>Sign out</button>
+          <a e:else href="/signin">Sign in</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="site-main">
+      <slot/>
+    </main>
+
+    <footer class="site-footer">
+      <div class={["page-shell", wide ? "is-wide" : "is-form", "site-footer-inner", "cluster"]}>
+        <span>{config.newsletter.name} · letters from {config.newsletter.writer}</span>
+        <a e:if={!session.isLoggedIn()} class="link-muted" href="/signin">Writer sign in</a>
+      </div>
+    </footer>
+  </div>
+</Layout>

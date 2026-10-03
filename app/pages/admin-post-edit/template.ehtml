@@ -1,0 +1,293 @@
+import "./style.css";
+import { raw, redirect } from "@elements/app";
+import config from "#config";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { Layout } from "#app/shared/templates/layout";
+import {
+  Access,
+  Post,
+  PublishWhen,
+  deletePost,
+  renderMarkdown,
+  savePost,
+  slugify,
+  splitTeaser,
+  TEASER_PARAGRAPHS,
+} from "#app/shared/services/posts";
+import { Audience } from "#app/shared/services/subscribers";
+import { errorMessage, formatDate } from "#app/shared/format";
+
+type Mode = "draft" | "now" | "schedule";
+
+interface EditorState {
+  title: string;
+  slug: string;
+  body: string;
+  access: Access;
+  mode: Mode;
+  scheduleAt: string;
+  slugTouched: boolean;
+  error: string;
+  busy: boolean;
+}
+
+const STARTER = `Write the opening paragraph here. It is what every reader sees first.
+
+Write a second paragraph. On a paid post, readers who are not paying see this far.
+
+## A heading
+
+Everything after the first ${TEASER_PARAGRAPHS} paragraphs of a paid post is for paid subscribers.
+`;
+
+/** A Date as the value a datetime-local input takes, in the browser's time zone. */
+function toLocalInput(date: Date): string {
+  let pad = (n: number) => String(n).padStart(2, "0");
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function tomorrowMorning(): Date {
+  let d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(8, 0, 0, 0);
+
+  return d;
+}
+
+function initialState(post: Post | null): EditorState {
+  let scheduled = post?.publishAt && !post.sentAt ? post.publishAt : null;
+
+  return {
+    title: post?.title ?? "",
+    slug: post?.slug ?? "",
+    body: post?.body ?? STARTER,
+    access: post?.access ?? "free",
+    mode: scheduled ? "schedule" : "draft",
+    scheduleAt: toLocalInput(scheduled ?? tomorrowMorning()),
+    slugTouched: post !== null,
+    error: "",
+    busy: false,
+  };
+}
+
+function onTitle(state: EditorState) {
+  if (!state.slugTouched) {
+    state.slug = slugify(state.title);
+  }
+}
+
+function recipientsFor(audience: Audience): number {
+  return audience.paid + audience.free;
+}
+
+function saveLabel(post: Post | null, state: EditorState): string {
+  if (post?.sentAt) {
+    return "Save changes";
+  }
+
+  switch (state.mode) {
+    case "now":
+      return "Publish and send";
+
+    case "schedule":
+      return "Schedule";
+
+    default:
+      return "Save draft";
+  }
+}
+
+function onSave(post: Post | null, state: EditorState, audience: Audience) {
+  state.error = "";
+
+  let when: PublishWhen = null;
+
+  if (!post?.sentAt) {
+    if (state.mode === "now") {
+      let n = recipientsFor(audience);
+
+      if (!confirm(`Publish "${state.title || "this post"}" now and email it to ${n} subscribers?`)) {
+        return;
+      }
+
+      when = "now";
+    }
+
+    if (state.mode === "schedule") {
+      let at = new Date(state.scheduleAt);
+      when = at;
+
+      if (isNaN(+at) || at <= new Date()) {
+        state.error = "Choose a time in the future to schedule this post.";
+        return;
+      }
+    }
+  }
+
+  state.busy = true;
+
+  try {
+    savePost(
+      post?.id ?? null,
+      { title: state.title, slug: state.slug, body: state.body, access: state.access },
+      when,
+    );
+
+    let done = post?.sentAt ? "saved" : state.mode === "now" ? "published" : state.mode === "schedule" ? "scheduled" : "draft";
+    redirect(`/admin/posts?done=${done}`);
+  } catch (err: any) {
+    state.error = errorMessage(err);
+    state.busy = false;
+  }
+}
+
+function onDelete(post: Post) {
+  if (!confirm("Delete this draft? This can't be undone.")) {
+    return;
+  }
+
+  deletePost(post.id);
+  redirect("/admin/posts?done=deleted");
+}
+
+<html lang="en" class="page-admin-post-edit" (
+  post: Post | null,
+  audience: Audience,
+  private state: EditorState = initialState(post),
+)>
+  <head>
+    <title>{post ? "Edit post" : "New post"} · {config.newsletter.name}</title>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <Layout wide={true}>
+      <form class="page-shell is-wide stack is-lg" onsubmit={() => onSave(post, state, audience)}>
+        <div class="editor-head row">
+          <div class="stack is-xs">
+            <a class="link-muted" href="/admin/posts">← Posts</a>
+            <h1>{post ? "Edit post" : "New post"}</h1>
+          </div>
+          <div class="cluster">
+            <a e:if={post?.sentAt} class="button is-ghost" href={`/p/${post?.slug}`}>View on the site</a>
+            <button type="submit" class="is-primary" disabled={state.busy}>{saveLabel(post, state)}</button>
+          </div>
+        </div>
+
+        <p e:if={state.error} class="callout is-danger" role="alert">{state.error}</p>
+
+        <p e:if={post?.sentAt} class="callout is-success">
+          Published {formatDate(post?.sentAt!)} and sent to {post?.recipientCount} subscribers.
+          Edits update the post on the site; the emails have already gone.
+        </p>
+
+        <div class="meta-fields">
+          <div class="field">
+            <label for="title">Title</label>
+            <input id="title" value={state.title} oninput={() => onTitle(state)}
+                   placeholder="A letter about…" required>
+          </div>
+          <div class="field">
+            <label for="slug">Address</label>
+            <input id="slug" value={state.slug} oninput={() => state.slugTouched = true}
+                   placeholder="a-letter-about" autocapitalize="none" spellcheck={false} required>
+            <p class="hint">/p/{state.slug || "…"}</p>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="stack is-sm">
+            <div class="pane-label row">
+              <label for="body">Markdown</label>
+              <span>{state.body.trim() ? state.body.trim().split(/\s+/).length : 0} words</span>
+            </div>
+            <textarea id="body" class="source" value={state.body} spellcheck={true}/>
+          </div>
+
+          <div class="stack is-sm">
+            <div class="pane-label row">
+              <span>Preview</span>
+              <span e:if={state.access === "paid"}>Readers who aren't paying see down to the line</span>
+            </div>
+            <div class="preview">
+              <h2 class="preview-title">{state.title || "Untitled"}</h2>
+              <div e:if={state.access === "paid"} class="prose">
+                {raw(renderMarkdown(splitTeaser(state.body).teaser))}
+                <p class="teaser-mark">Paid subscribers only below this line</p>
+                {raw(renderMarkdown(splitTeaser(state.body).rest))}
+              </div>
+              <div e:else class="prose">{raw(renderMarkdown(state.body))}</div>
+            </div>
+          </div>
+        </div>
+
+        <fieldset class="stack" disabled={!!post?.sentAt}>
+          <legend>Who can read it</legend>
+          <div class="choices">
+            <label class={["choice", state.access === "free" && "is-active"]}>
+              <input type="radio" name="access" checked={state.access === "free"} onchange={() => state.access = "free"}>
+              <span>
+                <span class="choice-name">Free</span>
+                <span class="choice-note">Everyone reads it in full, by email and on the site.</span>
+              </span>
+            </label>
+            <label class={["choice", state.access === "paid" && "is-active"]}>
+              <input type="radio" name="access" checked={state.access === "paid"} onchange={() => state.access = "paid"}>
+              <span>
+                <span class="choice-name">Paid</span>
+                <span class="choice-note">In full for paid subscribers; a teaser and a link for everyone else.</span>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset e:if={!post?.sentAt} class="stack">
+          <legend>When</legend>
+          <div class="choices">
+            <label class={["choice", state.mode === "draft" && "is-active"]}>
+              <input type="radio" name="mode" checked={state.mode === "draft"} onchange={() => state.mode = "draft"}>
+              <span>
+                <span class="choice-name">Draft</span>
+                <span class="choice-note">Saved, not published.</span>
+              </span>
+            </label>
+            <label class={["choice", state.mode === "now" && "is-active"]}>
+              <input type="radio" name="mode" checked={state.mode === "now"} onchange={() => state.mode = "now"}>
+              <span>
+                <span class="choice-name">Publish now</span>
+                <span class="choice-note">Emails {recipientsFor(audience)} subscribers right away.</span>
+              </span>
+            </label>
+            <label class={["choice", state.mode === "schedule" && "is-active"]}>
+              <input type="radio" name="mode" checked={state.mode === "schedule"} onchange={() => state.mode = "schedule"}>
+              <span>
+                <span class="choice-name">Schedule</span>
+                <span class="choice-note">Publishes and sends at a time you pick.</span>
+              </span>
+            </label>
+          </div>
+
+          <div e:if={state.mode === "schedule"} class="field">
+            <label for="schedule-at">Publish at</label>
+            <input id="schedule-at" type="datetime-local" value={state.scheduleAt}>
+          </div>
+
+          <p e:if={state.mode !== "draft"} class="hint">
+            <span e:if={state.access === "paid"}>
+              {audience.paid} paid subscribers get the whole post; {audience.free} free subscribers get the opening and a link.
+            </span>
+            <span e:else>All {recipientsFor(audience)} subscribers get the whole post.</span>
+          </p>
+        </fieldset>
+
+        <div class="actions row">
+          <button e:if={post && !post.sentAt} type="button" class="is-danger is-ghost" onclick={() => onDelete(post!)}>
+            Delete draft
+          </button>
+          <span e:else></span>
+          <button type="submit" class="is-primary" disabled={state.busy}>{saveLabel(post, state)}</button>
+        </div>
+      </form>
+    </Layout>
+  </body>
+</html>

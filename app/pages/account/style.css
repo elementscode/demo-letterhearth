@@ -1,0 +1,21 @@
+@import "#app/shared/styles/page.css";
+
+.page-account h1 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+}
+
+.page-account .card h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+}
+
+.page-account .card-head {
+  justify-content: space-between;
+}
+
+.page-account .muted {
+  color: var(--ink-dim);
+}

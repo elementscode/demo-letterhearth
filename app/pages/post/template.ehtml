@@ -1,0 +1,61 @@
+import "./style.css";
+import { raw } from "@elements/app";
+import config from "#config";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { Layout } from "#app/shared/templates/layout";
+import { SubscribeForm, ReaderState } from "#app/shared/templates/subscribe-form";
+import { Access } from "#app/shared/services/posts";
+import { formatDate } from "#app/shared/format";
+
+export interface PostView {
+  title: string;
+  slug: string;
+  access: Access;
+  publishAt: Date;
+}
+
+<html lang="en" class="page-post" (
+  post: PostView,
+  html: string,
+  locked: boolean,
+  reader: ReaderState | null,
+)>
+  <head>
+    <title>{post.title} · {config.newsletter.name}</title>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <Layout>
+      <article class="page-shell is-form stack is-xl">
+        <header class="post-head stack is-sm">
+          <div class="post-meta cluster is-sm">
+            <time>{formatDate(post.publishAt)}</time>
+            <span>by {config.newsletter.writer}</span>
+            <span e:if={post.access === "paid"} class="pill is-accent">Paid</span>
+          </div>
+          <h1 class="text-balance">{post.title}</h1>
+        </header>
+
+        <div class={["post-body", "prose", locked && "is-locked"]}>{raw(html)}</div>
+
+        <section e:if={locked} class="paywall stack">
+          <div class="stack is-xs">
+            <h2>The rest of this letter is for paid subscribers</h2>
+            <p>
+              Subscribe for ${(config.newsletter.priceCents / 100).toFixed(0)} a month to read it in full,
+              along with every paid letter in the archive.
+            </p>
+          </div>
+          <SubscribeForm {reader} plan="paid" />
+        </section>
+
+        <footer class="post-foot cluster">
+          <a class="link-action" href="/#archive">← All letters</a>
+          <span class="post-meta" e:if={!reader}>
+            Already a subscriber? <a class="link-prose" href="/signin">Sign in</a>
+          </span>
+        </footer>
+      </article>
+    </Layout>
+  </body>
+</html>

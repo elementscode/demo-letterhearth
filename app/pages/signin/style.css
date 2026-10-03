@@ -1,0 +1,33 @@
+@import "#app/shared/styles/page.css";
+
+.page-signin h1 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+}
+
+.page-signin .panel h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+}
+
+.page-signin .demo {
+  font-size: var(--text-sm);
+}
+
+.page-signin .demo dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+}
+
+.page-signin .demo dt {
+  color: var(--ink-dim);
+}
+
+.page-signin .demo dd {
+  margin: 0;
+  font-family: var(--font-mono);
+}

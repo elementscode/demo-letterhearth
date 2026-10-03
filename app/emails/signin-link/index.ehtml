@@ -1,0 +1,20 @@
+import "./style.css";
+import config from "#config";
+import { EmailFooter } from "#app/emails/footer";
+
+/**
+ * A one-time sign-in link for a reader.
+ *
+ * @email
+ */
+<html (signinUrl: string, unsubscribeUrl: string)>
+  <body class="email signin-link">
+    <div class="email-wrap">
+      <h1>Sign in to {config.newsletter.name}</h1>
+      <p>Use this link to sign in. It works once, for the next hour.</p>
+      <p><a class="cta" href={signinUrl}>Sign in</a></p>
+      <p>If you didn't ask for this, you can ignore this email.</p>
+      <EmailFooter {unsubscribeUrl} />
+    </div>
+  </body>
+</html>

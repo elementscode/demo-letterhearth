@@ -1,0 +1,95 @@
+import "./style.css";
+import config from "#config";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { Layout } from "#app/shared/templates/layout";
+import { AdminNav } from "#app/shared/templates/admin-nav";
+import { Access } from "#app/shared/services/posts";
+import { formatShortDate } from "#app/shared/format";
+
+export interface PostListRow {
+  id: string;
+  title: string;
+  slug: string;
+  access: Access;
+  publishAt: Date | null;
+  sentAt: Date | null;
+  recipientCount: number;
+}
+
+const NOTICES: Record<string, string> = {
+  published: "Published. The emails are going out now.",
+  scheduled: "Scheduled. It publishes and sends at the time you chose.",
+  draft: "Draft saved.",
+  saved: "Changes saved.",
+  deleted: "Draft deleted.",
+};
+
+function whenLabel(p: PostListRow): string {
+  if (p.sentAt) {
+    return `Sent ${formatShortDate(p.sentAt)}`;
+  }
+
+  if (p.publishAt) {
+    return `Sends ${p.publishAt.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
+  }
+
+  return "Not scheduled";
+}
+
+<html lang="en" class="page-admin-posts" (posts: PostListRow[], done: string)>
+  <head>
+    <title>Posts · {config.newsletter.name}</title>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <Layout wide={true}>
+      <div class="page-shell is-wide stack is-xl">
+        <div class="admin-head row">
+          <div class="stack is-xs">
+            <p class="eyebrow">Writer</p>
+            <h1>{config.newsletter.name}</h1>
+          </div>
+          <a class="button is-primary" href="/admin/posts/new">New post</a>
+        </div>
+
+        <AdminNav active="posts" />
+
+        <p e:if={NOTICES[done]} class="callout is-success" role="status">{NOTICES[done]}</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Access</th>
+                <th class="num">Recipients</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr e:for={p of posts}>
+                <td class="title"><a href={`/admin/posts/${p.id}`}>{p.title}</a></td>
+                <td>
+                  <div class="cluster is-sm">
+                    <span e:if={p.sentAt} class="pill is-success"><span class="pill-dot"></span>Published</span>
+                    <span e:elseif={p.publishAt} class="pill is-warning"><span class="pill-dot"></span>Scheduled</span>
+                    <span e:else class="pill">Draft</span>
+                    <span class="when">{whenLabel(p)}</span>
+                  </div>
+                </td>
+                <td>
+                  <span e:if={p.access === "paid"} class="pill is-accent">Paid</span>
+                  <span e:else class="pill">Free</span>
+                </td>
+                <td class="num">{p.sentAt ? p.recipientCount : "–"}</td>
+              </tr>
+              <tr e:if={posts.length === 0}>
+                <td colspan="4">No posts yet. <a class="link-prose" href="/admin/posts/new">Write the first one</a>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </Layout>
+  </body>
+</html>
