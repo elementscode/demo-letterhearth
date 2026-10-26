@@ -1,40 +1,12 @@
-![Letterhearth, a paid newsletter built with Elements: a paid post showing its first two paragraphs fading into a subscribe prompt with free and $8 per month plans.](https://elements.dev/demos/01a0f455-f25d-784c-a9d9-35a5841308ce/poster?v=a22b5b3aa879)
+![A paid newsletter with card subscriptions, built by Claude Code on Elements: a paid post showing its first two paragraphs fading into a subscribe prompt with free and $8 per month plans.](https://elements.dev/demos/01a0f455-f25d-784c-a9d9-35a5841308ce/poster?v=a22b5b3aa879)
 
-# Letterhearth
+# A paid newsletter with card subscriptions, built by Claude Code on Elements
 
-> A demo app built with [Elements](https://elements.dev).
+> Letterhearth is a full-stack app built with Claude Code on Elements.
 
 Free or $8 per month subscriptions by card, a teaser on paid posts, and markdown posts the writer schedules and emails.
 
-**Demo:** [Letterhearth](https://elements.dev/demos/01a0f455-f25d-784c-a9d9-35a5841308ce)
-
-## Agent specs
-
-- **Agent:** Claude Code, Opus 5.5 Medium
-- **Time:** 22 min
-- **Cost:** $7.74 at API rates, September 2026
-
-## Get started
-
-```bash
-elements create letterhearth -scaffold=elementscode/demo-letterhearth
-```
-
-## Seed data and demo accounts
-
-The seed creates the writer, Maren Holt, six published posts (three free,
-three paid), five free subscribers and three paid ones. The paid subscribers
-are on complimentary plans with no Stripe subscription behind them, so the
-dashboard shows $24 per month before anyone pays.
-
-| Account                  | Password        | Role       |
-| ------------------------ | --------------- | ---------- |
-| maren@letterhearth.com   | `hearth-writer` | the writer |
-
-The sign-in page shows this login and a button that fills it in. Readers have
-no password: they are signed in when they subscribe, and after that they sign
-in with an emailed link. In development, emails are written to
-`.elements/logs/job.log` instead of being sent.
+[Run this app on your machine](https://elements.dev/demos/01a0f455-f25d-784c-a9d9-35a5841308ce). Use this demo as inspiration, or as the starting point for your own app. Your agent creates a new app with this one as the scaffold, and you prompt it to add whatever features you want.
 
 ## Payments
 
@@ -54,8 +26,6 @@ checkout.
 
 Letterhearth needed free and paid subscriptions billed monthly by card, scheduled posts that go out by email, a teaser for readers who are not paying, one-click unsubscribe, and live counts for the writer. Each of those is a part of Elements, so the agent spent its 22 minutes on the newsletter itself.
 
-### What Elements gave the app
-
 - **Live counts and revenue.** Subscribers are a LiveTable, so the writer's free and paid counts and monthly revenue move the moment a reader subscribes or upgrades.
 
 - **Monthly subscriptions.** Subscribing, upgrading and cancelling are `@rpc` calls, and paid plans go through Stripe at $8 per month. The return page and Stripe's webhook record a new subscription once. Until a Stripe key is added, a built-in test checkout takes the payment through the same code, and in production the app registers its own webhook.
@@ -68,16 +38,6 @@ Letterhearth needed free and paid subscriptions billed monthly by card, schedule
 
 - **Sessions for readers and the writer.** Readers are signed in when they subscribe and later by an emailed link, and every writer page shares one guard on the writer's role.
 
-### What the project server gave the agent
+## Why Elements
 
-The project server runs alongside the agent and answers as soon as a file is saved: it type-checks the templates, TypeScript and SQL, applies migrations and reruns the tests, so every question came back right away and the agent kept building.
-
-### What shipped
-
-The app type-checks with zero errors and all 57 tests pass. Every page works on desktop and phone. A real sandbox payment went through Stripe end to end.
-
-**Demo:** [Letterhearth](https://elements.dev/demos/01a0f455-f25d-784c-a9d9-35a5841308ce)
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+Elements is an integrated full-stack app framework and a project server. The project server checks the agent's work as it builds: it type-checks the server and browser code, analyzes the program, applies migrations and runs the tests, then reports the results to the agent. A security mistake, such as calling a server-only function from the browser, is a compile error. The agent reads the report and fixes its own mistakes before it tells you a feature is done. The same checks run on every feature you ask for next.
