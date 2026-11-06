@@ -16,6 +16,15 @@ import {
 } from "#app/shared/services/posts";
 import { Audience } from "#app/shared/services/subscribers";
 import { errorMessage, formatDate } from "#app/shared/format";
+import { Alert } from "@elements/ui/alert";
+import { AlertDialog, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@elements/ui/alert-dialog";
+import { Button } from "@elements/ui/button";
+import { DatePicker } from "@elements/ui/date-picker";
+import { Field, FieldLabel, FieldContent, FieldTitle, FieldDescription, FieldSet, FieldLegend } from "@elements/ui/field";
+import { Input } from "@elements/ui/input";
+import { RadioGroup, RadioGroupItem } from "@elements/ui/radio-group";
+import { Textarea } from "@elements/ui/textarea";
+import { TimePicker } from "@elements/ui/time-picker";
 
 type Mode = "draft" | "now" | "schedule";
 
@@ -25,10 +34,12 @@ interface EditorState {
   body: string;
   access: Access;
   mode: Mode;
-  scheduleAt: string;
+  scheduleDate: string;
+  scheduleTime: string;
   slugTouched: boolean;
   error: string;
   busy: boolean;
+  confirming: boolean;
 }
 
 const STARTER = `Write the opening paragraph here. It is what every reader sees first.
@@ -40,11 +51,16 @@ Write a second paragraph. On a paid post, readers who are not paying see this fa
 Everything after the first ${TEASER_PARAGRAPHS} paragraphs of a paid post is for paid subscribers.
 `;
 
-/** A Date as the value a datetime-local input takes, in the browser's time zone. */
-function toLocalInput(date: Date): string {
-  let pad = (n: number) => String(n).padStart(2, "0");
+const pad = (n: number) => String(n).padStart(2, "0");
 
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+/** A Date's day as the ISO date a DatePicker takes, in the browser's time zone. */
+function toLocalDate(date: Date): string {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** A Date's time of day as the "HH:MM" a TimePicker takes. */
+function toLocalTime(date: Date): string {
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function tomorrowMorning(): Date {
@@ -57,6 +73,7 @@ function tomorrowMorning(): Date {
 
 function initialState(post: Post | null): EditorState {
   let scheduled = post?.publishAt && !post.sentAt ? post.publishAt : null;
+  let at = scheduled ?? tomorrowMorning();
 
   return {
     title: post?.title ?? "",
@@ -64,10 +81,12 @@ function initialState(post: Post | null): EditorState {
     body: post?.body ?? STARTER,
     access: post?.access ?? "free",
     mode: scheduled ? "schedule" : "draft",
-    scheduleAt: toLocalInput(scheduled ?? tomorrowMorning()),
+    scheduleDate: toLocalDate(at),
+    scheduleTime: toLocalTime(at),
     slugTouched: post !== null,
     error: "",
     busy: false,
+    confirming: false,
   };
 }
 
@@ -98,24 +117,19 @@ function saveLabel(post: Post | null, state: EditorState): string {
   }
 }
 
-function onSave(post: Post | null, state: EditorState, audience: Audience) {
+function onSave(post: Post | null, state: EditorState) {
   state.error = "";
 
   let when: PublishWhen = null;
 
   if (!post?.sentAt) {
     if (state.mode === "now") {
-      let n = recipientsFor(audience);
-
-      if (!confirm(`Publish "${state.title || "this post"}" now and email it to ${n} subscribers?`)) {
-        return;
-      }
-
-      when = "now";
+      state.confirming = true;
+      return;
     }
 
     if (state.mode === "schedule") {
-      let at = new Date(state.scheduleAt);
+      let at = new Date(`${state.scheduleDate}T${state.scheduleTime}`);
       when = at;
 
       if (isNaN(+at) || at <= new Date()) {
@@ -125,6 +139,10 @@ function onSave(post: Post | null, state: EditorState, audience: Audience) {
     }
   }
 
+  save(post, state, when);
+}
+
+function save(post: Post | null, state: EditorState, when: PublishWhen) {
   state.busy = true;
 
   try {
@@ -143,12 +161,12 @@ function onSave(post: Post | null, state: EditorState, audience: Audience) {
 }
 
 function onDelete(post: Post) {
-  if (!confirm("Delete this draft? This can't be undone.")) {
-    return;
-  }
-
   deletePost(post.id);
   redirect("/admin/posts?done=deleted");
+}
+
+function today(): string {
+  return toLocalDate(new Date());
 }
 
 <html lang="en" class="page-admin-post-edit" (
@@ -162,37 +180,34 @@ function onDelete(post: Post) {
   </head>
   <body>
     <Layout wide={true}>
-      <form class="page-shell is-wide stack is-lg" onsubmit={() => onSave(post, state, audience)}>
+      <form class="page-shell is-wide stack is-lg" onsubmit={() => onSave(post, state)}>
         <div class="editor-head row">
           <div class="stack is-xs">
             <a class="link-muted" href="/admin/posts">← Posts</a>
             <h1>{post ? "Edit post" : "New post"}</h1>
           </div>
           <div class="cluster">
-            <a e:if={post?.sentAt} class="button is-ghost" href={`/p/${post?.slug}`}>View on the site</a>
-            <button type="submit" class="is-primary" disabled={state.busy}>{saveLabel(post, state)}</button>
+            <Button e:if={post?.sentAt} variant="ghost" href={`/p/${post?.slug}`}>View on the site</Button>
+            <Button type="submit" variant="primary" loading={state.busy}>{saveLabel(post, state)}</Button>
           </div>
         </div>
 
-        <p e:if={state.error} class="callout is-danger" role="alert">{state.error}</p>
+        <Alert e:if={state.error} variant="danger">{state.error}</Alert>
 
-        <p e:if={post?.sentAt} class="callout is-success">
+        <Alert e:if={post?.sentAt} variant="success" role="none">
           Published {formatDate(post?.sentAt!)} and sent to {post?.recipientCount} subscribers.
           Edits update the post on the site; the emails have already gone.
-        </p>
+        </Alert>
 
         <div class="meta-fields">
-          <div class="field">
-            <label for="title">Title</label>
-            <input id="title" value={state.title} oninput={() => onTitle(state)}
-                   placeholder="A letter about…" required>
-          </div>
-          <div class="field">
-            <label for="slug">Address</label>
-            <input id="slug" value={state.slug} oninput={() => state.slugTouched = true}
-                   placeholder="a-letter-about" autocapitalize="none" spellcheck={false} required>
-            <p class="hint">/p/{state.slug || "…"}</p>
-          </div>
+          <Field label="Title" required>
+            <Input value={state.title} oninput={() => onTitle(state)} placeholder="A letter about…"
+                   attrs={{ id: "title" }} />
+          </Field>
+          <Field label="Address" description={`/p/${state.slug || "…"}`} required>
+            <Input value={state.slug} oninput={() => state.slugTouched = true} placeholder="a-letter-about"
+                   attrs={{ id: "slug", autocapitalize: "none", spellcheck: "false" }} />
+          </Field>
         </div>
 
         <div class="split">
@@ -201,7 +216,7 @@ function onDelete(post: Post) {
               <label for="body">Markdown</label>
               <span>{state.body.trim() ? state.body.trim().split(/\s+/).length : 0} words</span>
             </div>
-            <textarea id="body" class="source" value={state.body} spellcheck={true}/>
+            <Textarea value={state.body} class="source" autosize={false} attrs={{ id: "body", spellcheck: "true" }} />
           </div>
 
           <div class="stack is-sm">
@@ -221,55 +236,69 @@ function onDelete(post: Post) {
           </div>
         </div>
 
-        <fieldset class="stack" disabled={!!post?.sentAt}>
-          <legend>Who can read it</legend>
-          <div class="choices">
-            <label class={["choice", state.access === "free" && "is-active"]}>
-              <input type="radio" name="access" checked={state.access === "free"} onchange={() => state.access = "free"}>
-              <span>
-                <span class="choice-name">Free</span>
-                <span class="choice-note">Everyone reads it in full, by email and on the site.</span>
-              </span>
-            </label>
-            <label class={["choice", state.access === "paid" && "is-active"]}>
-              <input type="radio" name="access" checked={state.access === "paid"} onchange={() => state.access = "paid"}>
-              <span>
-                <span class="choice-name">Paid</span>
-                <span class="choice-note">In full for paid subscribers; a teaser and a link for everyone else.</span>
-              </span>
-            </label>
-          </div>
-        </fieldset>
+        <FieldSet disabled={!!post?.sentAt}>
+          <FieldLegend>Who can read it</FieldLegend>
+          <RadioGroup value={state.access} name="access" class="choices" attrs={{ "aria-label": "Who can read it" }}>
+            <FieldLabel>
+              <Field orientation="horizontal" reserveError={false}>
+                <RadioGroupItem value="free" />
+                <FieldContent>
+                  <FieldTitle>Free</FieldTitle>
+                  <FieldDescription>Everyone reads it in full, by email and on the site.</FieldDescription>
+                </FieldContent>
+              </Field>
+            </FieldLabel>
+            <FieldLabel>
+              <Field orientation="horizontal" reserveError={false}>
+                <RadioGroupItem value="paid" />
+                <FieldContent>
+                  <FieldTitle>Paid</FieldTitle>
+                  <FieldDescription>In full for paid subscribers; a teaser and a link for everyone else.</FieldDescription>
+                </FieldContent>
+              </Field>
+            </FieldLabel>
+          </RadioGroup>
+        </FieldSet>
 
-        <fieldset e:if={!post?.sentAt} class="stack">
-          <legend>When</legend>
-          <div class="choices">
-            <label class={["choice", state.mode === "draft" && "is-active"]}>
-              <input type="radio" name="mode" checked={state.mode === "draft"} onchange={() => state.mode = "draft"}>
-              <span>
-                <span class="choice-name">Draft</span>
-                <span class="choice-note">Saved, not published.</span>
-              </span>
-            </label>
-            <label class={["choice", state.mode === "now" && "is-active"]}>
-              <input type="radio" name="mode" checked={state.mode === "now"} onchange={() => state.mode = "now"}>
-              <span>
-                <span class="choice-name">Publish now</span>
-                <span class="choice-note">Emails {recipientsFor(audience)} subscribers right away.</span>
-              </span>
-            </label>
-            <label class={["choice", state.mode === "schedule" && "is-active"]}>
-              <input type="radio" name="mode" checked={state.mode === "schedule"} onchange={() => state.mode = "schedule"}>
-              <span>
-                <span class="choice-name">Schedule</span>
-                <span class="choice-note">Publishes and sends at a time you pick.</span>
-              </span>
-            </label>
-          </div>
+        <FieldSet e:if={!post?.sentAt}>
+          <FieldLegend>When</FieldLegend>
+          <RadioGroup value={state.mode} name="mode" class="choices" attrs={{ "aria-label": "When" }}>
+            <FieldLabel>
+              <Field orientation="horizontal" reserveError={false}>
+                <RadioGroupItem value="draft" />
+                <FieldContent>
+                  <FieldTitle>Draft</FieldTitle>
+                  <FieldDescription>Saved, not published.</FieldDescription>
+                </FieldContent>
+              </Field>
+            </FieldLabel>
+            <FieldLabel>
+              <Field orientation="horizontal" reserveError={false}>
+                <RadioGroupItem value="now" />
+                <FieldContent>
+                  <FieldTitle>Publish now</FieldTitle>
+                  <FieldDescription>Emails {recipientsFor(audience)} subscribers right away.</FieldDescription>
+                </FieldContent>
+              </Field>
+            </FieldLabel>
+            <FieldLabel>
+              <Field orientation="horizontal" reserveError={false}>
+                <RadioGroupItem value="schedule" />
+                <FieldContent>
+                  <FieldTitle>Schedule</FieldTitle>
+                  <FieldDescription>Publishes and sends at a time you pick.</FieldDescription>
+                </FieldContent>
+              </Field>
+            </FieldLabel>
+          </RadioGroup>
 
-          <div e:if={state.mode === "schedule"} class="field">
-            <label for="schedule-at">Publish at</label>
-            <input id="schedule-at" type="datetime-local" value={state.scheduleAt}>
+          <div e:if={state.mode === "schedule"} class="schedule-at cluster">
+            <Field label="Publish on">
+              <DatePicker value={state.scheduleDate} min={today()} required />
+            </Field>
+            <Field label="At">
+              <TimePicker value={state.scheduleTime} required />
+            </Field>
           </div>
 
           <p e:if={state.mode !== "draft"} class="hint">
@@ -278,15 +307,27 @@ function onDelete(post: Post) {
             </span>
             <span e:else>All {recipientsFor(audience)} subscribers get the whole post.</span>
           </p>
-        </fieldset>
+        </FieldSet>
 
         <div class="actions row">
-          <button e:if={post && !post.sentAt} type="button" class="is-danger is-ghost" onclick={() => onDelete(post!)}>
-            Delete draft
-          </button>
+          <AlertDialog e:if={post && !post.sentAt} title="Delete this draft?" description="This can't be undone." size="sm">
+            <Button slot="trigger" variant="ghost" class="delete-draft">Delete draft</Button>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction variant="danger" onclick={() => onDelete(post!)}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialog>
           <span e:else></span>
-          <button type="submit" class="is-primary" disabled={state.busy}>{saveLabel(post, state)}</button>
+          <Button type="submit" variant="primary" loading={state.busy}>{saveLabel(post, state)}</Button>
         </div>
+
+        <AlertDialog open={state.confirming}
+                     title={`Publish "${state.title || "this post"}" now and email it to ${recipientsFor(audience)} subscribers?`}>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onclick={() => save(post, state, "now")}>Publish and send</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialog>
       </form>
     </Layout>
   </body>

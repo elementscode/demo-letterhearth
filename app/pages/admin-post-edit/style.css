@@ -85,34 +85,16 @@
   gap: var(--space-3);
 }
 
-.page-admin-post-edit .choice {
-  display: flex;
-  gap: var(--space-3);
+.page-admin-post-edit .delete-draft {
+  color: var(--danger-ink);
+}
+
+.page-admin-post-edit .schedule-at {
   align-items: flex-start;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-md);
-  cursor: pointer;
 }
 
-.page-admin-post-edit .choice.is-active {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
-}
-
-.page-admin-post-edit .choice input {
-  margin-top: 0.2em;
-}
-
-.page-admin-post-edit .choice-name {
-  display: block;
-  font-weight: var(--weight-semibold);
-}
-
-.page-admin-post-edit .choice-note {
-  display: block;
-  font-size: var(--text-sm);
-  color: var(--ink-dim);
+.page-admin-post-edit .schedule-at .field {
+  width: auto;
 }
 
 .page-admin-post-edit .actions {
