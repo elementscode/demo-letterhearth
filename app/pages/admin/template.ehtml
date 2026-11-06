@@ -10,7 +10,7 @@ import { Badge } from "@elements/ui/badge";
 import { Button } from "@elements/ui/button";
 import { Card, CardContent } from "@elements/ui/card";
 import { DataTable, DataTableColumn } from "@elements/ui/data-table";
-import { ToggleGroup, ToggleGroupItem } from "@elements/ui/toggle-group";
+import { ToggleGroup, ToggleGroupItem, type ChangeDetails } from "@elements/ui/toggle-group";
 
 export type Filter = "all" | "paid" | "free" | "unsubscribed";
 
@@ -68,7 +68,7 @@ const COLUMNS: DataTableColumn[] = [
 ];
 
 /** A filter stays chosen: pressing the active one again does not clear it. */
-function onFilter(view: { filter: Filter }, value: string, details: { cancel(): void }) {
+function onFilter(view: { filter: Filter }, value: string, details: ChangeDetails) {
   if (!value) {
     details.cancel();
     return;
