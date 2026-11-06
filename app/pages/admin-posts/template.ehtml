@@ -73,7 +73,7 @@ function whenLabel(p: PostListRow): string {
             </thead>
             <tbody>
               <tr e:for={p of posts}>
-                <TableCell class="title"><a href={`/admin/posts/${p.id}`}>{p.title}</a></TableCell>
+                <TableCell class="title" wrap><a href={`/admin/posts/${p.id}`}>{p.title}</a></TableCell>
                 <TableCell>
                   <div class="cluster is-sm">
                     <Badge e:if={p.sentAt} variant="success" dot>Published</Badge>
