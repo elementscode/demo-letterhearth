@@ -3,7 +3,7 @@ import config from "#config";
 import favicon from "#app/shared/assets/favicons/favicon.svg";
 import { Layout } from "#app/shared/templates/layout";
 import { resubscribeByToken } from "#app/shared/services/subscribers";
-import { Alert, AlertDescription } from "@elements/ui/alert";
+import { Alert } from "@elements/ui/alert";
 import { Button } from "@elements/ui/button";
 
 function onResubscribe(token: string, state: { back: boolean }) {
@@ -39,10 +39,8 @@ function onResubscribe(token: string, state: { back: boolean }) {
           <h1>You're unsubscribed</h1>
           <p>{email} won't get any more letters from {config.newsletter.name}.</p>
           <Alert e:if={paid} variant="accent" role="none">
-            <AlertDescription>
-              Your paid subscription is still active, so every letter stays open to you on the site.
-              To stop paying, cancel it from <a class="link-prose" href="/account">your account</a>.
-            </AlertDescription>
+            Your paid subscription is still active, so every letter stays open to you on the site.
+            To stop paying, cancel it from <a class="link-prose" href="/account">your account</a>.
           </Alert>
           <div class="cluster">
             <Button onclick={() => onResubscribe(token, state)}>Undo, keep sending letters</Button>
