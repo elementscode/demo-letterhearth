@@ -6,14 +6,9 @@
   font-size: var(--text-3xl);
 }
 
-.page-account .card h2 {
-  margin: 0;
+.page-account .card-title {
   font-family: var(--font-serif);
   font-size: var(--text-xl);
-}
-
-.page-account .card-head {
-  justify-content: space-between;
 }
 
 .page-account .muted {

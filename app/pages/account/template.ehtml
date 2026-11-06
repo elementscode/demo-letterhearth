@@ -11,6 +11,11 @@ import {
   startUpgrade,
 } from "#app/shared/services/subscribers";
 import { errorMessage, formatDate } from "#app/shared/format";
+import { Alert } from "@elements/ui/alert";
+import { AlertDialog, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@elements/ui/alert-dialog";
+import { Badge } from "@elements/ui/badge";
+import { Button } from "@elements/ui/button";
+import { Card, CardAction, CardContent } from "@elements/ui/card";
 
 interface AccountState {
   view: AccountView;
@@ -42,10 +47,6 @@ async function onUpgrade(state: AccountState) {
 }
 
 async function onCancel(state: AccountState) {
-  if (!confirm("Cancel your paid subscription? You keep paid access until the end of this period.")) {
-    return;
-  }
-
   await run(state, () => cancelSubscription());
 }
 
@@ -74,31 +75,30 @@ async function onEmails(state: AccountState, enabled: boolean) {
           <p class="muted">Signed in as {state.view.email}</p>
         </div>
 
-        <p e:if={paidNotice === "paid"} class="callout is-success" role="status">
+        <Alert e:if={paidNotice === "paid"} variant="success" role="status">
           Payment received. You're a paid subscriber, and every letter is open to you.
-        </p>
-        <p e:if={paidNotice === "processing"} class="callout is-warning" role="status">
+        </Alert>
+        <Alert e:if={paidNotice === "processing"} variant="warning" role="status">
           Your payment is processing. Your plan updates here as soon as Stripe confirms it.
-        </p>
-        <p e:if={state.error} class="callout is-danger" role="alert">{state.error}</p>
+        </Alert>
+        <Alert e:if={state.error} variant="danger">{state.error}</Alert>
 
-        <section class="card">
-          <div class="card-head row">
-            <h2>Plan</h2>
-            <span e:if={state.view.plan === "paid"} class="pill is-accent">Paid</span>
-            <span e:else class="pill">Free</span>
-          </div>
+        <Card title="Plan" level={2}>
+          <CardAction slot="action">
+            <Badge e:if={state.view.plan === "paid"} variant="accent">Paid</Badge>
+            <Badge e:else variant="secondary">Free</Badge>
+          </CardAction>
 
-          <div class="card-body stack">
+          <CardContent class="stack">
             <div e:if={state.view.plan === "free"} class="stack is-sm">
               <p>
                 You get every free letter in full, and the opening of every paid one.
                 Upgrade for {PRICE} a month to read everything.
               </p>
               <div>
-                <button type="button" class="is-primary" disabled={state.busy} onclick={() => onUpgrade(state)}>
+                <Button variant="primary" disabled={state.busy} onclick={() => onUpgrade(state)}>
                   Upgrade for {PRICE}/month
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -109,9 +109,9 @@ async function onEmails(state: AccountState, enabled: boolean) {
                 then move to the free plan.
               </p>
               <div>
-                <button type="button" class="is-primary" disabled={state.busy} onclick={() => onResume(state)}>
+                <Button variant="primary" disabled={state.busy} onclick={() => onResume(state)}>
                   Keep my paid subscription
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -122,39 +122,42 @@ async function onEmails(state: AccountState, enabled: boolean) {
                 Thank you for supporting {config.newsletter.name}.
               </p>
               <div>
-                <button type="button" disabled={state.busy} onclick={() => onCancel(state)}>
-                  Cancel subscription
-                </button>
+                <AlertDialog title="Cancel your paid subscription?"
+                             description="You keep paid access until the end of this period."
+                             size="sm">
+                  <Button slot="trigger" disabled={state.busy}>Cancel subscription</Button>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep my subscription</AlertDialogCancel>
+                    <AlertDialogAction variant="danger" onclick={() => onCancel(state)}>Cancel subscription</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialog>
               </div>
             </div>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
 
-        <section class="card">
-          <div class="card-head row">
-            <h2>Email</h2>
-            <span e:if={state.view.emailsEnabled} class="pill is-success"><span class="pill-dot"></span>On</span>
-            <span e:else class="pill">Off</span>
-          </div>
+        <Card title="Email" level={2}>
+          <CardAction slot="action">
+            <Badge e:if={state.view.emailsEnabled} variant="success" dot>On</Badge>
+            <Badge e:else variant="secondary">Off</Badge>
+          </CardAction>
 
-          <div class="card-body stack is-sm">
+          <CardContent class="stack is-sm">
             <p e:if={state.view.emailsEnabled}>New letters arrive at {state.view.email}.</p>
             <p e:else>
               You're not getting letters by email.
               <span e:if={state.view.plan === "paid"}>Your paid plan is unchanged, and every letter is here on the site.</span>
             </p>
             <div>
-              <button e:if={state.view.emailsEnabled} type="button" disabled={state.busy}
-                      onclick={() => onEmails(state, false)}>
+              <Button e:if={state.view.emailsEnabled} disabled={state.busy} onclick={() => onEmails(state, false)}>
                 Stop emails
-              </button>
-              <button e:else type="button" class="is-primary" disabled={state.busy}
-                      onclick={() => onEmails(state, true)}>
+              </Button>
+              <Button e:else variant="primary" disabled={state.busy} onclick={() => onEmails(state, true)}>
                 Send me letters again
-              </button>
+              </Button>
             </div>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   </body>
