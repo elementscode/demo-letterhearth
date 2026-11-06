@@ -6,6 +6,8 @@
 
 Free or $8 per month subscriptions by card, a teaser on paid posts, and markdown posts the writer schedules and emails.
 
+Letterhearth uses the `editorial` theme from @elements/ui.
+
 [Run this app on your machine](https://elements.dev/demos/01a0f455-f25d-784c-a9d9-35a5841308ce). Use this demo as inspiration, or as the starting point for your own app. Your agent creates a new app with this one as the scaffold, and you prompt it to add whatever features you want.
 
 ## Payments
