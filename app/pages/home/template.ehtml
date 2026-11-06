@@ -5,6 +5,8 @@ import { Layout } from "#app/shared/templates/layout";
 import { SubscribeForm, ReaderState } from "#app/shared/templates/subscribe-form";
 import { PostSummary } from "#app/shared/services/posts";
 import { formatDate } from "#app/shared/format";
+import { Badge } from "@elements/ui/badge";
+import { Empty } from "@elements/ui/empty";
 
 <html lang="en" class="page-home" (posts: PostSummary[], reader: ReaderState | null)>
   <head>
@@ -31,17 +33,17 @@ import { formatDate } from "#app/shared/format";
             <span class="archive-meta">{posts.length} letters</span>
           </div>
 
-          <ul class="archive-list">
+          <ul e:if={posts.length > 0} class="archive-list">
             <li e:for={post of posts} class="stack is-sm">
               <div class="archive-meta cluster is-sm">
                 <time>{formatDate(post.publishAt)}</time>
-                <span e:if={post.access === "paid"} class="pill is-accent">Paid</span>
+                <Badge e:if={post.access === "paid"} variant="accent">Paid</Badge>
               </div>
               <h3 class="archive-title"><a href={`/p/${post.slug}`}>{post.title}</a></h3>
               <p class="archive-excerpt">{post.excerpt}</p>
             </li>
-            <li e:if={posts.length === 0} class="archive-excerpt">The first letter is on its way.</li>
           </ul>
+          <Empty e:else title="The first letter is on its way." level={3} />
         </section>
       </div>
     </Layout>

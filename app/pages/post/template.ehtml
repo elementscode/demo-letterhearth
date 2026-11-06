@@ -6,6 +6,7 @@ import { Layout } from "#app/shared/templates/layout";
 import { SubscribeForm, ReaderState } from "#app/shared/templates/subscribe-form";
 import { Access } from "#app/shared/services/posts";
 import { formatDate } from "#app/shared/format";
+import { Badge } from "@elements/ui/badge";
 
 export interface PostView {
   title: string;
@@ -31,7 +32,7 @@ export interface PostView {
           <div class="post-meta cluster is-sm">
             <time>{formatDate(post.publishAt)}</time>
             <span>by {config.newsletter.writer}</span>
-            <span e:if={post.access === "paid"} class="pill is-accent">Paid</span>
+            <Badge e:if={post.access === "paid"} variant="accent">Paid</Badge>
           </div>
           <h1 class="text-balance">{post.title}</h1>
         </header>
