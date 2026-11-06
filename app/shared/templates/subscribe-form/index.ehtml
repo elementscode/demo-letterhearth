@@ -3,6 +3,11 @@ import { redirect } from "@elements/app";
 import config from "#config";
 import { errorMessage } from "#app/shared/format";
 import { subscribe, startUpgrade, Plan } from "#app/shared/services/subscribers";
+import { Alert } from "@elements/ui/alert";
+import { Button } from "@elements/ui/button";
+import { Field, FieldLabel, FieldContent, FieldTitle, FieldDescription } from "@elements/ui/field";
+import { Input } from "@elements/ui/input";
+import { RadioGroup, RadioGroupItem } from "@elements/ui/radio-group";
 
 /** Who is looking at the form: a signed-in reader, or nobody. */
 export interface ReaderState {
@@ -69,9 +74,9 @@ async function onUpgrade(form: SubscribeState) {
   private form: SubscribeState = { email: "", plan, error: "", done: "", busy: false },
 )>
   <div class="subscribe-form stack">
-    <p e:if={form.error} class="callout is-danger" role="alert">{form.error}</p>
+    <Alert e:if={form.error} variant="danger">{form.error}</Alert>
 
-    <div e:if={form.done} class="callout is-success" role="status">{form.done}</div>
+    <Alert e:if={form.done} variant="success" role="status">{form.done}</Alert>
 
     <div e:elseif={reader && reader.plan === "paid"} class="stack is-sm">
       <p><strong>You're a paid subscriber.</strong> Every letter is open to you.</p>
@@ -84,45 +89,47 @@ async function onUpgrade(form: SubscribeState) {
         Upgrade for {PRICE} a month to read every paid letter in full.
       </p>
       <div class="cluster">
-        <button type="button" class="is-primary" disabled={form.busy} onclick={() => onUpgrade(form)}>
+        <Button variant="primary" loading={form.busy} onclick={() => onUpgrade(form)}>
           Upgrade for {PRICE}/month
-        </button>
+        </Button>
         <a class="link-muted" href="/account">Your account</a>
       </div>
     </div>
 
     <form e:else class="stack" onsubmit={() => onSubscribe(form)}>
-      <div class="plans" role="radiogroup" aria-label="Plan">
-        <label class={["plan", form.plan === "free" && "is-active"]}>
-          <input type="radio" name="plan" checked={form.plan === "free"} onchange={() => form.plan = "free"}>
-          <span>
-            <span class="plan-name">Free</span>
-            <span class="plan-note">Free letters in full, and the opening of every paid one.</span>
-          </span>
-        </label>
+      <RadioGroup value={form.plan} name="plan" class="plans" attrs={{ "aria-label": "Plan" }}>
+        <FieldLabel>
+          <Field orientation="horizontal" reserveError={false}>
+            <RadioGroupItem value="free" />
+            <FieldContent>
+              <FieldTitle>Free</FieldTitle>
+              <FieldDescription>Free letters in full, and the opening of every paid one.</FieldDescription>
+            </FieldContent>
+          </Field>
+        </FieldLabel>
 
-        <label class={["plan", form.plan === "paid" && "is-active"]}>
-          <input type="radio" name="plan" checked={form.plan === "paid"} onchange={() => form.plan = "paid"}>
-          <span>
-            <span class="plan-name">Paid · {PRICE}/month</span>
-            <span class="plan-note">Every letter in full. Cancel any time.</span>
-          </span>
-        </label>
-      </div>
+        <FieldLabel>
+          <Field orientation="horizontal" reserveError={false}>
+            <RadioGroupItem value="paid" />
+            <FieldContent>
+              <FieldTitle>Paid · {PRICE}/month</FieldTitle>
+              <FieldDescription>Every letter in full. Cancel any time.</FieldDescription>
+            </FieldContent>
+          </Field>
+        </FieldLabel>
+      </RadioGroup>
 
       <div class="subscribe-row row">
-        <input type="email"
+        <Input type="email"
                name="email"
                value={form.email}
-               aria-label="Email address"
+               class="subscribe-email"
                placeholder="you@example.com"
-               autocomplete="email"
-               autocapitalize="none"
-               spellcheck={false}
-               required>
-        <button type="submit" class="is-primary" disabled={form.busy}>
+               required
+               attrs={{ "aria-label": "Email address", autocomplete: "email", autocapitalize: "none", spellcheck: "false" }} />
+        <Button type="submit" variant="primary" loading={form.busy}>
           {form.plan === "paid" ? "Continue to payment" : "Subscribe"}
-        </button>
+        </Button>
       </div>
 
       <p class="fine">
