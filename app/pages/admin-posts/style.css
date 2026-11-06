@@ -12,21 +12,13 @@
   font-size: var(--text-3xl);
 }
 
-.page-admin-posts .table-wrap {
-  overflow-x: auto;
-}
-
-.page-admin-posts table {
-  width: 100%;
-}
-
-.page-admin-posts td.title a {
+.page-admin-posts .title a {
   font-weight: var(--weight-medium);
   color: var(--ink);
   text-decoration: none;
 }
 
-.page-admin-posts td.title a:hover {
+.page-admin-posts .title a:hover {
   color: var(--accent-deep);
 }
 
@@ -36,15 +28,8 @@
   white-space: nowrap;
 }
 
-.page-admin-posts td.num,
-.page-admin-posts th.num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
 @media (max-width: 40rem) {
-  .page-admin-posts th.num,
-  .page-admin-posts td.num {
+  .page-admin-posts .num {
     display: none;
   }
 }

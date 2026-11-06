@@ -5,6 +5,11 @@ import { Layout } from "#app/shared/templates/layout";
 import { AdminNav } from "#app/shared/templates/admin-nav";
 import { Access } from "#app/shared/services/posts";
 import { formatShortDate } from "#app/shared/format";
+import { Badge } from "@elements/ui/badge";
+import { Button } from "@elements/ui/button";
+import { Empty, EmptyContent } from "@elements/ui/empty";
+import { Table, TableHead, TableCell } from "@elements/ui/table";
+import { Toast } from "@elements/ui/toast";
 
 export interface PostListRow {
   id: string;
@@ -49,46 +54,49 @@ function whenLabel(p: PostListRow): string {
             <p class="eyebrow">Writer</p>
             <h1>{config.newsletter.name}</h1>
           </div>
-          <a class="button is-primary" href="/admin/posts/new">New post</a>
+          <Button variant="primary" href="/admin/posts/new">New post</Button>
         </div>
 
         <AdminNav active="posts" />
 
-        <p e:if={NOTICES[done]} class="callout is-success" role="status">{NOTICES[done]}</p>
+        <Toast e:if={NOTICES[done]} open title={NOTICES[done]} type="success" />
 
-        <div class="table-wrap">
+        <Table e:if={posts.length > 0} label="Posts">
           <table>
             <thead>
               <tr>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Access</th>
-                <th class="num">Recipients</th>
+                <TableHead>Title</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Access</TableHead>
+                <TableHead align="end" class="num">Recipients</TableHead>
               </tr>
             </thead>
             <tbody>
               <tr e:for={p of posts}>
-                <td class="title"><a href={`/admin/posts/${p.id}`}>{p.title}</a></td>
-                <td>
+                <TableCell class="title"><a href={`/admin/posts/${p.id}`}>{p.title}</a></TableCell>
+                <TableCell>
                   <div class="cluster is-sm">
-                    <span e:if={p.sentAt} class="pill is-success"><span class="pill-dot"></span>Published</span>
-                    <span e:elseif={p.publishAt} class="pill is-warning"><span class="pill-dot"></span>Scheduled</span>
-                    <span e:else class="pill">Draft</span>
+                    <Badge e:if={p.sentAt} variant="success" dot>Published</Badge>
+                    <Badge e:elseif={p.publishAt} variant="warning" dot>Scheduled</Badge>
+                    <Badge e:else variant="secondary">Draft</Badge>
                     <span class="when">{whenLabel(p)}</span>
                   </div>
-                </td>
-                <td>
-                  <span e:if={p.access === "paid"} class="pill is-accent">Paid</span>
-                  <span e:else class="pill">Free</span>
-                </td>
-                <td class="num">{p.sentAt ? p.recipientCount : "–"}</td>
-              </tr>
-              <tr e:if={posts.length === 0}>
-                <td colspan="4">No posts yet. <a class="link-prose" href="/admin/posts/new">Write the first one</a>.</td>
+                </TableCell>
+                <TableCell>
+                  <Badge e:if={p.access === "paid"} variant="accent">Paid</Badge>
+                  <Badge e:else variant="secondary">Free</Badge>
+                </TableCell>
+                <TableCell align="end" class="num">{p.sentAt ? p.recipientCount : "–"}</TableCell>
               </tr>
             </tbody>
           </table>
-        </div>
+        </Table>
+
+        <Empty e:else title="No posts yet" variant="outline">
+          <EmptyContent>
+            <Button variant="primary" href="/admin/posts/new">Write the first one</Button>
+          </EmptyContent>
+        </Empty>
       </div>
     </Layout>
   </body>
