@@ -59,7 +59,6 @@
 }
 
 .site-nav .site-signout {
-  padding-inline: 0;
   font-size: inherit;
   font-weight: inherit;
   color: var(--ink-soft);
