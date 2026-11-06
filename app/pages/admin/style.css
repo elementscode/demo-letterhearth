@@ -18,10 +18,6 @@
   gap: var(--space-4);
 }
 
-.page-admin .stat {
-  padding: var(--space-5);
-}
-
 .page-admin .stat-label {
   margin: 0;
   font-size: var(--text-sm);
@@ -47,20 +43,6 @@
   color: var(--accent-deep);
 }
 
-.page-admin .stat-value.is-bump {
-  animation: admin-bump 900ms ease-out;
-}
-
-@keyframes admin-bump {
-  from {
-    background: var(--accent-soft);
-  }
-
-  to {
-    background: transparent;
-  }
-}
-
 .page-admin .list-head {
   justify-content: space-between;
   gap: var(--space-3);
@@ -73,58 +55,12 @@
   font-size: var(--text-xl);
 }
 
-.page-admin .filters {
-  gap: var(--space-1);
-}
-
-.page-admin .table-wrap {
-  overflow-x: auto;
-}
-
-.page-admin table {
-  width: 100%;
-}
-
-.page-admin td.email {
-  font-weight: var(--weight-medium);
-  overflow-wrap: break-word;
-}
-
-.page-admin td.joined,
-.page-admin th.joined {
-  text-align: right;
-  white-space: nowrap;
-  color: var(--ink-dim);
-}
-
-.page-admin .row-new {
-  animation: admin-bump 1600ms ease-out;
-}
-
 @media (max-width: 40rem) {
   .page-admin .stats {
     grid-template-columns: 1fr;
   }
 
-  .page-admin .stat {
-    padding: var(--space-4);
-  }
-
   .page-admin .stat-value {
     font-size: var(--text-3xl);
-  }
-
-  .page-admin th.joined,
-  .page-admin td.joined {
-    display: none;
-  }
-
-  .page-admin td.email {
-    font-size: var(--text-sm);
-  }
-
-  .page-admin th,
-  .page-admin td {
-    padding-inline: var(--space-2);
   }
 }
