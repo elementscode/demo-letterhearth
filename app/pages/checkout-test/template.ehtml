@@ -5,6 +5,10 @@ import favicon from "#app/shared/assets/favicons/favicon.svg";
 import { Layout } from "#app/shared/templates/layout";
 import { payTestCheckout } from "#app/shared/services/subscribers";
 import { errorMessage, formatDollars } from "#app/shared/format";
+import { Alert } from "@elements/ui/alert";
+import { Badge } from "@elements/ui/badge";
+import { Button } from "@elements/ui/button";
+import { Card, CardContent } from "@elements/ui/card";
 
 interface PayState {
   busy: boolean;
@@ -40,13 +44,13 @@ async function onPay(state: PayState) {
             <p class="eyebrow">Checkout</p>
             <h1>Subscribe to {config.newsletter.name}</h1>
           </div>
-          <span class="pill is-warning"><span class="pill-dot"></span>Test mode</span>
+          <Badge variant="warning" dot>Test mode</Badge>
         </div>
 
-        <p e:if={state.error} class="callout is-danger" role="alert">{state.error}</p>
+        <Alert e:if={state.error} variant="danger">{state.error}</Alert>
 
-        <section class="card">
-          <div class="card-body stack is-lg">
+        <Card>
+          <CardContent class="stack is-lg">
             <div class="line-item row">
               <div class="stack is-xs">
                 <span class="item-name">{config.newsletter.name} paid subscription</span>
@@ -66,14 +70,13 @@ async function onPay(state: PayState) {
             <p class="renews">Then {PRICE} every month until you cancel.</p>
 
             <div class="checkout-actions stack is-sm">
-              <button type="button" class={["is-primary", "is-lg", "pay", state.busy && "is-loading"]} disabled={state.busy}
-                      onclick={() => onPay(state)}>
-                {state.busy ? "Paying…" : `Pay ${PRICE_CENTS}`}
-              </button>
+              <Button variant="primary" size="lg" block loading={state.busy} onclick={() => onPay(state)}>
+                Pay {PRICE_CENTS}
+              </Button>
               <a class="link-muted cancel" href="/account">Cancel</a>
             </div>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
 
         <p class="test-note">
           This is the app's built-in test checkout. No card is taken and nothing is charged; paying here

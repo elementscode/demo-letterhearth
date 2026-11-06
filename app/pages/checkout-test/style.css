@@ -77,10 +77,6 @@
   margin: calc(-1 * var(--space-2)) 0 0;
 }
 
-.page-checkout-test .pay {
-  width: 100%;
-}
-
 .page-checkout-test .cancel {
   align-self: center;
 }
